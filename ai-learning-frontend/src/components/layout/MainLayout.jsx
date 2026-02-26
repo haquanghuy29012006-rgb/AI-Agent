@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, BarChart2, LogOut, GraduationCap, School } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, BarChart2, LogOut, School } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
   <button
@@ -20,20 +20,42 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const role = localStorage.getItem("role");
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login", { replace: true });
+  };
+
+  // Menu theo role
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tổng quan', path: '/' },
     { icon: GraduationCap, label: 'Góc học tập (AI)', path: '/learn' },
     { icon: BarChart2, label: 'Kết quả', path: '/analytics' },
-    { icon: School, label: 'Khu vực Giáo viên', path: '/teacher' },
   ];
+
+  // Nếu là teacher mới thêm menu này
+  if (role === "teacher") {
+    menuItems.push({
+      icon: School,
+      label: 'Khu vực Giáo viên',
+      path: '/teacher'
+    });
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* 1. SIDEBAR (Cố định bên trái) */}
+      
+      {/* SIDEBAR */}
       <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed h-full z-10 left-0 top-0">
+        
         <div className="p-6 flex items-center gap-2 border-b border-gray-100">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
-          <span className="text-xl font-bold text-gray-800">Learning.io</span>
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+            AI
+          </div>
+          <span className="text-xl font-bold text-gray-800">
+            Learning.io
+          </span>
         </div>
 
         <nav className="p-4 space-y-2">
@@ -42,24 +64,27 @@ const MainLayout = ({ children }) => {
               key={item.path}
               icon={item.icon}
               label={item.label}
-              path={item.path}
               active={location.pathname === item.path}
               onClick={() => navigate(item.path)}
             />
           ))}
         </nav>
 
+        {/* LOGOUT */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-100 bg-white">
-          <button className="w-full flex items-center gap-2 text-red-500 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-medium">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 text-red-500 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors font-medium"
+          >
             <LogOut size={20} /> Đăng xuất
           </button>
         </div>
+
       </div>
 
-      {/* 2. MAIN CONTENT (Nội dung chính - Quan trọng phần ml-64) */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 ml-64 p-8 w-full">
-        {/* Children ở đây chính là TeacherDashboard */}
-        {children} 
+        {children}
       </div>
     </div>
   );
