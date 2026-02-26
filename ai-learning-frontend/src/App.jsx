@@ -1,152 +1,75 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
-  useLocation,
   Navigate,
-  useNavigate,
 } from "react-router-dom";
-import { BookOpen, MessageSquare, BrainCircuit, ArrowLeft } from "lucide-react";
-import Login from "./pages/Login";
 
-// Layout
+// --- Imports Layout & UI ---
 import MainLayout from "./components/layout/MainLayout";
-import Card, { CardHeader, CardBody } from "./components/common/Card";
 
-// Pages
-import TeacherDashboard from "./pages/teacher/TeacherDashboard";
-import StudentDashboard from "./pages/student/StudentDashboard";
-import Analytics from "./pages/student/Analytics";
+// --- Imports Các Trang (Pages) ---
+import Login from "./pages/Login"; // Trang đăng nhập
 
-// Features
-import ChatBox from "./components/features/chat/ChatBox";
-import QuizGenerator from "./components/features/quiz/QuizGenerator";
+// --- Imports Trang Student ---
+import OverviewPage from "./pages/student/OverviewPage";         // Trang tổng quan
+import StudentDashboard from "./pages/student/StudentDashboard"; // Trang danh sách bài học
+import Library from "./pages/student/Library";                   // Thư viện (nếu tách riêng)
+import Analytics from "./pages/student/Analytics";               // Trang thống kê
+import AIStudySpace from "./pages/student/AIStudySpace";         // Góc học tập AI
+
+// --- Imports Trang Teacher ---
+import TeacherDashboard from "./pages/teacher/TeacherDashboard"; // Trang giáo viên
 
 
-// ================= PROTECTED ROUTE =================
+// ============================================================================
+// COMPONENT: PROTECTED ROUTE (Bảo vệ route khi chưa đăng nhập)
+// ============================================================================
 const ProtectedRoute = ({ children, roleRequired }) => {
   const role = localStorage.getItem("role");
   const isLoggedIn = localStorage.getItem("isLoggedIn");
 
+  // Nếu chưa đăng nhập -> chuyển về trang login
   if (!isLoggedIn) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
+  // Nếu có yêu cầu role mà không đúng -> đá về trang chủ
   if (roleRequired && role !== roleRequired) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
 
-// ================= AI STUDY SPACE =================
-const AIStudySpace = () => {
-  const [activeTab, setActiveTab] = useState("chat");
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const currentDoc = location.state?.currentDoc;
-
-  if (!currentDoc) {
-    return <Navigate to="/library" replace />;
-  }
-
-  return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-indigo-100 flex justify-between items-center mb-6">
-        <div>
-          <button
-            onClick={() => navigate("/library")}
-            className="text-gray-500 text-sm flex items-center gap-1 hover:text-indigo-600 mb-1 transition-colors"
-          >
-            <ArrowLeft size={16} /> Quay lại thư viện
-          </button>
-          <h1 className="text-2xl font-bold text-indigo-900 flex items-center gap-2">
-            <BookOpen className="text-indigo-600" /> {currentDoc.title}
-          </h1>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-        <div className="lg:col-span-1 space-y-4 overflow-y-auto pr-2">
-          <Card>
-            <CardHeader>
-              <h3 className="font-bold text-gray-800">📖 Nội dung chính</h3>
-            </CardHeader>
-            <CardBody>
-              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
-                {currentDoc.description}
-              </p>
-            </CardBody>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="flex border-b border-gray-100">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`flex-1 py-4 font-bold ${
-                activeTab === "chat"
-                  ? "text-indigo-600 border-b-2 border-indigo-600"
-                  : "text-gray-500"
-              }`}
-            >
-              <MessageSquare size={18} /> Chat
-            </button>
-
-            <button
-              onClick={() => setActiveTab("quiz")}
-              className={`flex-1 py-4 font-bold ${
-                activeTab === "quiz"
-                  ? "text-green-600 border-b-2 border-green-600"
-                  : "text-gray-500"
-              }`}
-            >
-              <BrainCircuit size={18} /> Quiz
-            </button>
-          </div>
-
-          <div className="flex-1 p-4 bg-gray-50 overflow-hidden">
-            {activeTab === "chat" ? (
-              <ChatBox filename={currentDoc.filename} />
-            ) : (
-              <QuizGenerator
-                filename={currentDoc.filename}
-                topicName={currentDoc.title}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-// ================= APP =================
+// ============================================================================
+// APP COMPONENT CHÍNH (Routing System)
+// ============================================================================
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* LOGIN */}
+        {/* 1. Route LOGIN: Không dùng MainLayout */}
         <Route path="/login" element={<Login />} />
 
-        {/* STUDENT HOME */}
+        {/* ================= STUDENT ================= */}
+
+        {/* 2. Route TRANG CHỦ: Hiển thị Tổng Quan (OverviewPage) */}
         <Route
           path="/"
           element={
             <ProtectedRoute>
               <MainLayout>
-                <StudentDashboard />
+                <OverviewPage />
               </MainLayout>
             </ProtectedRoute>
           }
         />
 
-        {/* LIBRARY */}
+        {/* 3. Route THƯ VIỆN: Hiển thị danh sách bài học */}
         <Route
           path="/library"
           element={
@@ -158,7 +81,7 @@ function App() {
           }
         />
 
-        {/* AI LEARN */}
+        {/* 4. Route GÓC HỌC TẬP: Nơi Chat & Làm Quiz */}
         <Route
           path="/learn"
           element={
@@ -170,7 +93,7 @@ function App() {
           }
         />
 
-        {/* ANALYTICS */}
+        {/* 5. Route KẾT QUẢ/THỐNG KÊ */}
         <Route
           path="/analytics"
           element={
@@ -182,7 +105,9 @@ function App() {
           }
         />
 
-        {/* TEACHER */}
+        {/* ================= TEACHER ================= */}
+
+        {/* 6. Route GIÁO VIÊN: Upload & Quản lý */}
         <Route
           path="/teacher"
           element={
